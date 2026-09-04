@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerenciador Financeiro PRO</title>
+
+<!-- FullCalendar CDN -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<style>
+:root{
+    --bg:#f4f7fb;
+    --card:#ffffff;
+    --text:#172033;
+    --muted:#718096;
+    --border:#e6ebf2;
+
+    --primary:#4f46e5;
+    --primary-dark:#4338ca;
+    --primary-light:#eef2ff;
+
+    --green:#10b981;
+    --green-light:#ecfdf5;
+
+    --yellow:#f59e0b;
+    --yellow-light:#fffbeb;
+
+    --red:#ef4444;
+    --red-light:#fef2f2;
+
+    --blue:#3b82f6;
+    --blue-light:#eff6ff;
+
+    --shadow:0 8px 30px rgba(15,23,42,.06);
+    --radius:16px;
+}
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
+
+body{
+    background:var(--bg);
+    color:var(--text);
+    padding:20px;
+    transition:background .25s, color .25s;
+}
+
+body.dark{
+    --bg:#0f172a;
+    --card:#182235;
+    --text:#f1f5f9;
+    --muted:#94a3b8;
+    --border:#273449;
+
+    --primary-light:#242052;
+    --green-light:#073b2b;
+    --yellow-light:#402d08;
+    --red-light:#401c20;
+    --blue-light:#172f55;
+
+    --shadow:0 8px 30px rgba(0,0,0,.2);
+}
+
+.container{
+    max-width:1450px;
+    margin:auto;
+}
+
+/* HEADER */
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+}
+
+.brand h1{
+    font-size:1.5rem;
+    font-weight:800;
+}
+
+.brand p{
+    color:var(--muted);
+    font-size:.82rem;
+    margin-top:3px;
+}
+
+.top-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+.icon-btn{
+    width:42px;
+    height:42px;
+    padding:0;
+    background:var(--card);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+}
+
+/* DASHBOARD */
+.dashboard-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:14px;
+    margin-bottom:18px;
+}
+
+.dash-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:17px;
+    box-shadow:var(--shadow);
+    position:relative;
+    overflow:hidden;
+    transition:.2s;
+}
+
+.dash-card:hover{
+    transform:translateY(-2px);
+}
+
+.dash-card span{
+    color:var(--muted);
+    font-size:.68rem;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.dash-card h3{
+    font-size:1.35rem;
+    margin-top:5px;
+}
+
+.dash-card small{
+    display:block;
+    margin-top:4px;
+    color:var(--muted);
+    font-size:.7rem;
+}
+
+.dash-card.pendente{color:var(--yellow)}
+.dash-card.pendente h3{color:var(--yellow)}
+
+.dash-card.pago{color:var(--green)}
+.dash-card.pago h3{color:var(--green)}
+
+.dash-card.atrasado{color:var(--red)}
+.dash-card.atrasado h3{color:var(--red)}
+
+.dash-card.total{color:var(--primary)}
+.dash-card.total h3{color:var(--primary)}
+
+.dash-card.quantidade{color:var(--blue)}
+.dash-card.quantidade h3{color:var(--blue)}
+
+/* TOOLBAR */
+.toolbar{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:12px;
+    margin-bottom:18px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+    box-shadow:var(--shadow);
+}
+
+.search-box{
+    flex:1;
+    min-width:220px;
+    position:relative;
+}
+
+.search-box input{
+    padding-left:38px;
+}
+
+.search-icon{
+    position:absolute;
+    left:13px;
+    top:10px;
+    color:var(--muted);
+}
+
+.toolbar select{
+    width:auto;
+    min-width:145px;
+}
+
+/* LAYOUT */
+.main-layout{
+    display:grid;
+    grid-template-columns:310px 1fr;
+    gap:18px;
+}
+
+.sidebar{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px;
+    box-shadow:var(--shadow);
+}
+
+h2{
+    font-size:1rem;
+    margin-bottom:14px;
+}
+
+/* FORM */
+.form-group{
+    margin-bottom:11px;
+}
+
+label{
+    display:block;
+    color:var(--muted);
+    font-size:.72rem;
+    font-weight:700;
+    margin-bottom:5px;
+}
+
+input, select, textarea{
+    width:100%;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--text);
+    padding:10px 11px;
+    border-radius:9px;
+    outline:none;
+    font-size:.83rem;
+    transition:.2s;
+}
+
+input:focus, select:focus, textarea:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px var(--primary-light);
+}
+
+textarea{
+    min-height:70px;
+    resize:vertical;
+}
+
+/* BUTTONS */
+button{
+    border:none;
+    cursor:pointer;
+    border-radius:9px;
+    padding:9px 12px;
+    font-size:.78rem;
+    font-weight:700;
+    transition:.2s;
+}
+
+button:hover{
+    transform:translateY(-1px);
+}
+
+.btn-primary{ background:var(--primary); color:#fff; }
+.btn-primary:hover{ background:var(--primary-dark); }
+.btn-secondary{ background:var(--bg); color:var(--text); border:1px solid var(--border); }
+.btn-danger{ background:var(--red-light); color:var(--red); }
+.btn-success{ background:var(--green-light); color:var(--green); }
+.btn-warning{ background:var(--yellow-light); color:var(--yellow); }
+.btn-full{ width:100%; }
+
+.btn-group{
+    display:flex;
+    gap:7px;
+    margin-top:12px;
+}
+
+.btn-group button:first-child{ flex:1; }
+
+/* UPCOMING LIST */
+.upcoming-list{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    max-height:280px;
+    overflow-y:auto;
+}
+
+.upcoming-item{
+    padding:9px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    cursor:pointer;
+    background:var(--bg);
+}
+
+.upcoming-item:hover{ border-color:var(--primary); }
+
+.upcoming-top{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+}
+
+.upcoming-name{ font-weight:700; font-size:.78rem; }
+.upcoming-value{ font-size:.78rem; font-weight:800; }
+.upcoming-date{ color:var(--muted); font-size:.68rem; margin-top:4px; }
+
+/* CATEGORY */
+.category-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:7px 0;
+    border-bottom:1px solid var(--border);
+    font-size:.76rem;
+}
+.category-row:last-child{ border-bottom:none; }
+
+/* CALENDAR & SCROLL INTERNO DOS DIAS */
+#calendar-container{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+    box-shadow:var(--shadow);
+}
+
+.fc{ font-size:.78rem; }
+.fc .fc-toolbar-title{ font-size:1.1rem!important; font-weight:800; color:var(--text); }
+.fc .fc-button-primary{
+    background:var(--card)!important;
+    border-color:var(--border)!important;
+    color:var(--text)!important;
+    border-radius:8px!important;
+    font-weight:700!important;
+}
+.fc .fc-button-active{
+    background:var(--primary-light)!important;
+    color:var(--primary)!important;
+}
+.fc-theme-standard td, .fc-theme-standard th{ border-color:var(--border)!important; }
+
+/* FIXAR ALTURA E INSERIR SCROLL INTERNO NO DIA DO CALENDÁRIO */
+.fc-daygrid-day-frame{ 
+    height: 120px !important; 
+    overflow: hidden !important; 
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.fc-daygrid-day-events{
+    overflow-y: auto !important;
+    max-height: 80px !important;
+    padding-right: 2px;
+}
+
+.fc-daygrid-day-events::-webkit-scrollbar {
+    width: 3px;
+}
+.fc-daygrid-day-events::-webkit-scrollbar-thumb {
+    background: var(--muted);
+    border-radius: 3px;
+}
+
+.fc-day-today{ background:var(--primary-light)!important; }
+.fc-daygrid-event{ border-radius:6px!important; padding:2px 5px!important; cursor:pointer; }
+
+.day-total-badge{
+    display:block;
+    width:max-content;
+    max-width:100%;
+    margin:2px 2px 0 auto;
+    padding:2px 5px;
+    border-radius:5px;
+    background:var(--primary-light);
+    color:var(--primary);
+    font-size:.6rem;
+    font-weight:800;
+}
+
+/* MODAL */
+.modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,.55);
+    backdrop-filter:blur(5px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:15px;
+}
+
+.modal-overlay.active{ display:flex; }
+
+.modal-content{
+    background:var(--card);
+    color:var(--text);
+    border-radius:18px;
+    width:100%;
+    max-width:620px;
+    max-height:90vh;
+    overflow-y:auto;
+    padding:20px;
+    box-shadow:0 25px 60px rgba(0,0,0,.2);
+}
+
+.modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:1px solid var(--border);
+    padding-bottom:12px;
+    margin-bottom:15px;
+}
+
+.close-modal{
+    background:transparent;
+    color:var(--muted);
+    font-size:1.4rem;
+    padding:2px 7px;
+}
+
+.modal-item-card{
+    border:1px solid var(--border);
+    border-radius:13px;
+    padding:13px;
+    margin-bottom:10px;
+    background:var(--bg);
+    transition:.2s;
+}
+
+.modal-item-card.is-paid{ opacity:.72; }
+
+.item-header{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+}
+
+.item-check-group{
+    display:flex;
+    gap:10px;
+    cursor:pointer;
+    align-items:flex-start;
+}
+
+.custom-check{
+    width:23px;
+    height:23px;
+    flex-shrink:0;
+    border:2px solid var(--border);
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:white;
+}
+
+.is-paid .custom-check{
+    background:var(--green);
+    border-color:var(--green);
+}
+
+.custom-check::after{
+    content:"✓";
+    display:none;
+    font-size:12px;
+}
+
+.is-paid .custom-check::after{ display:block; }
+
+.item-title{ font-weight:800; font-size:.85rem; }
+.is-paid .item-title{ text-decoration:line-through; color:var(--muted); }
+.item-sub{ font-size:.7rem; color:var(--muted); margin-top:3px; }
+
+.item-actions{
+    display:flex;
+    gap:5px;
+}
+
+.item-actions button{ padding:7px 8px; }
+
+.status-badge{
+    display:inline-block;
+    padding:2px 6px;
+    border-radius:4px;
+    font-size:.65rem;
+    font-weight:800;
+    text-transform:uppercase;
+    margin-left:6px;
+}
+.status-badge.pago{ background:var(--green-light); color:var(--green); }
+.status-badge.atrasado{ background:var(--red-light); color:var(--red); }
+.status-badge.pendente{ background:var(--yellow-light); color:var(--yellow); }
+
+/* ATTACHMENTS */
+.attachment-section{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:10px;
+    padding-top:9px;
+    border-top:1px solid var(--border);
+}
+
+.attachment-badge, .file-input-label{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:5px 8px;
+    border-radius:7px;
+    font-size:.68rem;
+    text-decoration:none;
+    cursor:pointer;
+    background:var(--card);
+    border:1px solid var(--border);
+    color:var(--primary);
+    font-weight:700;
+}
+
+.file-input-label{
+    border-style:dashed;
+    color:var(--muted);
+}
+
+input[type=file]{ display:none; }
+
+.empty{
+    text-align:center;
+    padding:20px;
+    color:var(--muted);
+    font-size:.78rem;
+}
+
+/* TOAST */
+.toast{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    background:#172033;
+    color:white;
+    padding:12px 15px;
+    border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,.2);
+    transform:translateY(100px);
+    opacity:0;
+    pointer-events:none;
+    transition:.3s;
+    z-index:2000;
+    font-size:.78rem;
+    font-weight:600;
+}
+
+.toast.show{
+    transform:translateY(0);
+    opacity:1;
+}
+
+/* RESPONSIVE */
+@media(max-width:1150px){
+    .dashboard-grid{ grid-template-columns:repeat(3,1fr); }
+}
+
+@media(max-width:850px){
+    body{ padding:10px; }
+    .main-layout{ grid-template-columns:1fr; }
+    .dashboard-grid{ grid-template-columns:repeat(2,1fr); }
+    .sidebar{ order:1; }
+    #calendar-container{ order:2; }
+}
+
+@media(max-width:520px){
+    .dashboard-grid{ grid-template-columns:1fr 1fr; }
+    .dash-card{ padding:13px; }
+    .dash-card h3{ font-size:1.05rem; }
+    .fc .fc-toolbar{ flex-direction:column; gap:8px; }
+    .fc .fc-toolbar-chunk{ display:flex; }
+}
+
+@media print{
+    body{ background:#fff; padding:0; color:#000; }
+    .top-actions, .toolbar, .sidebar, .fc-header-toolbar, .close-modal, #btnNewFromModal{ display:none!important; }
+    .main-layout{ display:block; }
+    #calendar-container{ box-shadow:none; border:none; }
+    .dashboard-grid{ grid-template-columns:repeat(4,1fr); }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- HEADER -->
+<div class="topbar">
+    <div class="brand">
+        <h1>Gerenciador Financeiro</h1>
+        <p>Controle de contas, vencimentos e pagamentos</p>
+    </div>
+    <div class="top-actions">
+        <button class="icon-btn" onclick="toggleDarkMode()" title="Modo escuro">🌙</button>
+        <button class="btn-secondary" onclick="exportBackup()">💾 Backup</button>
+        <button class="btn-secondary" onclick="document.getElementById('restoreFile').click()">♻️ Restaurar</button>
+        <button class="btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+        <input type="file" id="restoreFile" accept=".json" onchange="restoreBackup(event)">
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard-grid">
+    <div class="dash-card pendente">
+        <span>A Vencer</span>
+        <h3 id="dashPendente">R$ 0,00</h3>
+        <small id="countPendente">0 contas</small>
+    </div>
+    <div class="dash-card pago">
+        <span>Pago</span>
+        <h3 id="dashPago">R$ 0,00</h3>
+        <small id="countPago">0 contas</small>
+    </div>
+    <div class="dash-card atrasado">
+        <span>Atrasado</span>
+        <h3 id="dashAtrasado">R$ 0,00</h3>
+        <small id="countAtrasado">0 contas</small>
+    </div>
+    <div class="dash-card total">
+        <span>Total Geral</span>
+        <h3 id="dashTotal">R$ 0,00</h3>
+        <small id="countTotal">0 contas</small>
+    </div>
+    <div class="dash-card quantidade">
+        <span>Próximos 7 dias</span>
+        <h3 id="dashProximos">R$ 0,00</h3>
+        <small id="countProximos">0 contas</small>
+    </div>
+</div>
+
+<!-- FILTROS -->
+<div class="toolbar">
+    <div class="search-box">
+        <span class="search-icon">🔎</span>
+        <input type="text" id="searchInput" placeholder="Pesquisar conta, fornecedor ou observação..." oninput="applyFilters()">
+    </div>
+    <select id="statusFilter" onchange="applyFilters()">
+        <option value="todos">Todos os status</option>
+        <option value="pendente">A vencer</option>
+        <option value="pago">Pagos</option>
+        <option value="atrasado">Atrasados</option>
+    </select>
+    <select id="categoryFilter" onchange="applyFilters()">
+        <option value="todas">Todas as categorias</option>
+        <option value="Impostos">Impostos</option>
+        <option value="Fornecedores">Fornecedores</option>
+        <option value="Outros">Outros</option>
+    </select>
+    <button class="btn-secondary" onclick="clearFilters()">✕ Limpar</button>
+</div>
+
+<!-- LAYOUT PRINCIPAL -->
+<div class="main-layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <!-- FORM -->
+        <div class="card">
+            <h2 id="formTitle">➕ Cadastrar Conta</h2>
+            <form id="accountForm">
+                <input type="hidden" id="editingId">
+                <div class="form-group">
+                    <label for="description">Descrição</label>
+                    <input type="text" id="description" placeholder="Ex: Fornecedor de Peças" required>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Valor (R$)</label>
+                    <input type="number" id="amount" step="0.01" min="0.01" placeholder="0,00" required>
+                </div>
+                <div class="form-group">
+                    <label for="dueDate">Vencimento</label>
+                    <input type="date" id="dueDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="category">Categoria</label>
+                    <select id="category">
+                        <option value="Impostos">Impostos</option>
+                        <option value="Fornecedores">Fornecedores</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Observação</label>
+                    <textarea id="notes" placeholder="Opcional..."></textarea>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn-primary" id="btnSubmitForm">Salvar Conta</button>
+                    <button type="button" class="btn-secondary" id="btnCancelEdit" style="display:none" onclick="resetForm()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- PRÓXIMOS VENCIMENTOS -->
+        <div class="card">
+            <h2>📌 Próximos vencimentos</h2>
+            <div id="upcomingList" class="upcoming-list"></div>
+        </div>
+
+        <!-- CATEGORIAS -->
+        <div class="card">
+            <h2>📊 Por categoria</h2>
+            <div id="categorySummary"></div>
+        </div>
+    </div>
+
+    <!-- CALENDÁRIO -->
+    <div id="calendar-container">
+        <div id="calendar"></div>
+    </div>
+</div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="dayModal" onclick="closeModalOnOutsideClick(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div>
+                <h2 id="modalDateTitle">Contas do Dia</h2>
+                <div id="modalDaySummary" style="font-size:.72rem;color:var(--muted)"></div>
+            </div>
+            <button class="close-modal" onclick="closeModal()">×</button>
+        </div>
+        <div id="modalBody"></div>
+        <button class="btn-primary btn-full" id="btnNewFromModal" style="margin-top:12px">+ Nova Conta para este Dia</button>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   CONFIGURAÇÕES DO BACKEND (GOOGLE DRIVE SERVER)
+========================================================= */
+const BACKEND_URL = "http://localhost:3000/upload";
+
+/* =========================================================
+   ESTADO E VARIÁVEIS GLOBAIS
+========================================================= */
+let accounts = JSON.parse(localStorage.getItem("my_accounts_data")) || [];
+let calendar;
+let activeModalDate = null;
+
+/* =========================================================
+   UTILITÁRIOS
+========================================================= */
+function money(value) {
+    return Number(value || 0).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+    });
+}
+
+function todayString() {
+    const d = new Date();
+    return d.toISOString().split("T")[0];
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return "";
+    const parts = dateStr.split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return dateStr;
+}
+
+function escapeHTML(str) {
+    return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.innerText = message;
+    toast.classList.add("show");
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+    }, 2500);
+}
+
+function toggleDarkMode() {
+    document.body.classList.toggle("dark");
+    const isDark = document.body.classList.contains("dark");
+    localStorage.setItem("theme_preference", isDark ? "dark" : "light");
+}
+
+/* =========================================================
+   REGRA DE NEGÓCIO - STATUS
+========================================================= */
+function getStatus(acc) {
+    if (acc.status === "pago") return "pago";
+    if (acc.dueDate < todayString()) return "atrasado";
+    return "pendente";
+}
+
+/* =========================================================
+   INICIALIZAÇÃO DA APLICAÇÃO
+========================================================= */
+document.addEventListener("DOMContentLoaded", () => {
+    if (localStorage.getItem("theme_preference") === "dark") {
+        document.body.classList.add("dark");
+    }
+
+    const calendarEl = document.getElementById("calendar");
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth",
+        locale: "pt-br",
+        editable: true,
+        eventDisplay: "block",
+        height: "auto",
+        headerToolbar: {
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,listMonth"
+        },
+        buttonText: {
+            today: "Hoje",
+            month: "Mês",
+            list: "Lista"
+        },
+        events: getCalendarEvents,
+        dayCellDidMount: function(arg) {
+            const dateStr = arg.date.toISOString().split("T")[0];
+            const dayTotal = accounts
+                .filter(acc => acc.dueDate === dateStr)
+                .reduce((sum, acc) => sum + Number(acc.amount || 0), 0);
+
+            if (dayTotal > 0) {
+                const numberEl = arg.el.querySelector(".fc-daygrid-day-top");
+                if (numberEl) {
+                    const badge = document.createElement("span");
+                    badge.className = "day-total-badge";
+                    badge.innerText = money(dayTotal);
+                    numberEl.appendChild(badge);
+                }
+            }
+        },
+        dateClick: function(info) {
+            openDayModal(info.dateStr);
+        },
+        eventClick: function(info) {
+            const acc = accounts.find(a => a.id === Number(info.event.id));
+            if (acc) openDayModal(acc.dueDate);
+        },
+        eventDrop: function(info) {
+            const id = Number(info.event.id);
+            const account = accounts.find(a => a.id === id);
+            if (account) {
+                const newDate = info.event.startStr.split("T")[0];
+                account.dueDate = newDate;
+                saveAndRefresh();
+                showToast("Vencimento alterado com sucesso.");
+            }
+        }
+    });
+
+    calendar.render();
+    document.getElementById("dueDate").value = todayString();
+    updateAll();
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeModal();
+    });
+});
+
+/* =========================================================
+   FILTROS E EVENTOS DE BUSCA
+========================================================= */
+function getFilteredAccounts() {
+    const search = document.getElementById("searchInput").value.toLowerCase().trim();
+    const status = document.getElementById("statusFilter").value;
+    const category = document.getElementById("categoryFilter").value;
+
+    return accounts.filter(acc => {
+        const matchesSearch = !search || 
+            acc.description.toLowerCase().includes(search) || 
+            acc.category.toLowerCase().includes(search) ||
+            (acc.notes && acc.notes.toLowerCase().includes(search));
+
+        const accStatus = getStatus(acc);
+        const matchesStatus = status === "todos" || accStatus === status;
+        const matchesCategory = category === "todas" || acc.category === category;
+
+        return matchesSearch && matchesStatus && matchesCategory;
+    });
+}
+
+function applyFilters() {
+    calendar.refetchEvents();
+    updateDashboard();
+    updateUpcomingList();
+    updateCategorySummary();
+}
+
+function clearFilters() {
+    document.getElementById("searchInput").value = "";
+    document.getElementById("statusFilter").value = "todos";
+    document.getElementById("categoryFilter").value = "todas";
+    applyFilters();
+}
+
+/* =========================================================
+   PERSISTÊNCIA E ATUALIZAÇÕES
+========================================================= */
+function saveAndRefresh() {
+    localStorage.setItem("my_accounts_data", JSON.stringify(accounts));
+    calendar.refetchEvents();
+    updateAll();
+}
+
+function updateAll() {
+    updateDashboard();
+    updateUpcomingList();
+    updateCategorySummary();
+}
+
+function getCalendarEvents(info, successCallback) {
+    const filtered = getFilteredAccounts();
+    const events = filtered.map(acc => {
+        const status = getStatus(acc);
+        let color = status === "pago" ? "#10b981" : (status === "atrasado" ? "#ef4444" : "#f59e0b");
+        return {
+            id: String(acc.id),
+            title: `${acc.description} • ${money(acc.amount)}`,
+            start: acc.dueDate,
+            color: color
+        };
+    });
+    successCallback(events);
+}
+
+/* =========================================================
+   ATUALIZAÇÃO DE INTERFACE
+========================================================= */
+function updateDashboard() {
+    const filtered = getFilteredAccounts();
+    const today = todayString();
+
+    const dNext7 = new Date();
+    dNext7.setDate(dNext7.getDate() + 7);
+    const next7Str = dNext7.toISOString().split("T")[0];
+
+    let pendente = 0, countPendente = 0;
+    let pago = 0, countPago = 0;
+    let atrasado = 0, countAtrasado = 0;
+    let total = 0, countTotal = filtered.length;
+    let proximos = 0, countProximos = 0;
+
+    filtered.forEach(acc => {
+        const val = Number(acc.amount || 0);
+        const st = getStatus(acc);
+        total += val;
+
+        if (st === "pago") {
+            pago += val;
+            countPago++;
+        } else if (st === "atrasado") {
+            atrasado += val;
+            countAtrasado++;
+        } else {
+            pendente += val;
+            countPendente++;
+        }
+
+        if (st !== "pago" && acc.dueDate >= today && acc.dueDate <= next7Str) {
+            proximos += val;
+            countProximos++;
+        }
+    });
+
+    document.getElementById("dashPendente").innerText = money(pendente);
+    document.getElementById("countPendente").innerText = `${countPendente} contas`;
+
+    document.getElementById("dashPago").innerText = money(pago);
+    document.getElementById("countPago").innerText = `${countPago} contas`;
+
+    document.getElementById("dashAtrasado").innerText = money(atrasado);
+    document.getElementById("countAtrasado").innerText = `${countAtrasado} contas`;
+
+    document.getElementById("dashTotal").innerText = money(total);
+    document.getElementById("countTotal").innerText = `${countTotal} contas`;
+
+    document.getElementById("dashProximos").innerText = money(proximos);
+    document.getElementById("countProximos").innerText = `${countProximos} contas`;
+}
+
+function updateUpcomingList() {
+    const upcomingList = document.getElementById("upcomingList");
+    const today = todayString();
+    
+    const upcoming = accounts
+        .filter(a => getStatus(a) !== "pago" && a.dueDate >= today)
+        .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+        .slice(0, 5);
+
+    if (upcoming.length === 0) {
+        upcomingList.innerHTML = `<div class="empty">Nenum vencimento próximo.</div>`;
+        return;
+    }
+
+    upcomingList.innerHTML = upcoming.map(acc => `
+        <div class="upcoming-item" onclick="openDayModal('${acc.dueDate}')">
+            <div class="upcoming-top">
+                <span class="upcoming-name">${escapeHTML(acc.description)}</span>
+                <span class="upcoming-value">${money(acc.amount)}</span>
+            </div>
+            <div class="upcoming-date">Vence em: ${formatDate(acc.dueDate)} • ${escapeHTML(acc.category)}</div>
+        </div>
+    `).join("");
+}
+
+function updateCategorySummary() {
+    const categorySummary = document.getElementById("categorySummary");
+    const categories = {
+        "Impostos": 0,
+        "Fornecedores": 0,
+        "Outros": 0
+    };
+
+    accounts.forEach(acc => {
+        const cat = acc.category in categories ? acc.category : "Outros";
+        categories[cat] += Number(acc.amount || 0);
+    });
+
+    categorySummary.innerHTML = Object.keys(categories).map(cat => `
+        <div class="category-row">
+            <span>${escapeHTML(cat)}</span>
+            <strong>${money(categories[cat])}</strong>
+        </div>
+    `).join("");
+}
+
+/* =========================================================
+   FORMULÁRIO E AÇÕES
+========================================================= */
+document.getElementById("accountForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const editingId = document.getElementById("editingId").value;
+    const description = document.getElementById("description").value.trim();
+    const amount = Number(document.getElementById("amount").value).toFixed(2);
+    const dueDate = document.getElementById("dueDate").value;
+    const category = document.getElementById("category").value;
+    const notes = document.getElementById("notes").value.trim();
+
+    if (editingId) {
+        const acc = accounts.find(a => a.id === Number(editingId));
+        if (acc) {
+            acc.description = description;
+            acc.amount = amount;
+            acc.dueDate = dueDate;
+            acc.category = category;
+            acc.notes = notes;
+            showToast("Conta atualizada com sucesso.");
+        }
+    } else {
+        accounts.push({
+            id: Date.now(),
+            description,
+            amount,
+            dueDate,
+            category,
+            notes,
+            status: "pendente",
+            boleto: null,
+            comprovante: null,
+            createdAt: new Date().toISOString()
+        });
+        showToast("Conta cadastrada com sucesso.");
+    }
+
+    saveAndRefresh();
+    resetForm();
+});
+
+function editAccount(id) {
+    const acc = accounts.find(a => a.id === id);
+    if (!acc) return;
+
+    document.getElementById("editingId").value = acc.id;
+    document.getElementById("description").value = acc.description;
+    document.getElementById("amount").value = acc.amount;
+    document.getElementById("dueDate").value = acc.dueDate;
+    document.getElementById("category").value = acc.category || "Outros";
+    document.getElementById("notes").value = acc.notes || "";
+
+    document.getElementById("formTitle").innerText = "✏️ Editar Conta";
+    document.getElementById("btnSubmitForm").innerText = "Atualizar Registro";
+    document.getElementById("btnCancelEdit").style.display = "block";
+
+    closeModal();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function resetForm() {
+    document.getElementById("accountForm").reset();
+    document.getElementById("editingId").value = "";
+    document.getElementById("formTitle").innerText = "➕ Cadastrar Conta";
+    document.getElementById("btnSubmitForm").innerText = "Salvar Conta";
+    document.getElementById("btnCancelEdit").style.display = "none";
+    document.getElementById("dueDate").value = todayString();
+}
+
+function deleteAccount(id, dateStr) {
+    if (!confirm("Deseja realmente remover esta conta?\n\nEssa ação não pode ser desfeita.")) return;
+
+    accounts = accounts.filter(a => a.id !== id);
+    saveAndRefresh();
+    openDayModal(dateStr);
+    showToast("Conta removida.");
+}
+
+function toggleStatus(id, dateStr) {
+    const acc = accounts.find(a => a.id === id);
+    if (!acc) return;
+
+    if (acc.status === "pago") {
+        acc.status = "pendente";
+        acc.paidAt = null;
+        showToast("Conta voltou para pendente.");
+    } else {
+        acc.status = "pago";
+        acc.paidAt = new Date().toISOString();
+        showToast("Conta marcada como paga! ✓");
+    }
+
+    saveAndRefresh();
+    openDayModal(dateStr);
+}
+
+/* =========================================================
+   VISUALIZADOR E GERENCIADOR DE ANEXOS VIA GOOGLE DRIVE
+========================================================= */
+function viewAttachment(id, type) {
+    const acc = accounts.find(a => a.id === id);
+    if (!acc || !acc[type]) return;
+
+    const file = acc[type];
+    if (file.url) {
+        window.open(file.url, '_blank');
+    }
+}
+
+async function handleFileUpload(input, id, type, dateStr) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const acc = accounts.find(a => a.id === id);
+    if (!acc) return;
+
+    const labelElement = input.parentElement;
+    const originalLabelText = labelElement.innerHTML;
+    
+    // Atualiza o botão exibindo carregamento
+    labelElement.innerHTML = `⏳ Enviando ao Drive...`;
+    labelElement.style.pointerEvents = "none";
+
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    // ➕ Enviando os dados da conta para o backend renomear o arquivo
+    formData.append("descricao", acc.description || "");
+    formData.append("data", acc.dueDate || "");
+    formData.append("valor", acc.amount || "");
+    formData.append("tipo", type === "comprovante" ? "Comprovante" : "Boleto");
+
+    try {
+        const response = await fetch(BACKEND_URL, {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.link) {
+            acc[type] = {
+                name: data.nomeArquivo || file.name,
+                url: data.link,
+                fileId: data.fileId
+            };
+
+            if (type === 'comprovante') {
+                acc.status = 'pago';
+                acc.paidAt = new Date().toISOString();
+                showToast("Comprovante enviado ao Drive e conta PAGA! ✓");
+            } else {
+                showToast("Boleto salvo no Google Drive!");
+            }
+
+            saveAndRefresh();
+            openDayModal(dateStr);
+        } else {
+            alert("Erro no upload para o Drive: " + (data.message || "Falha desconhecida."));
+            labelElement.innerHTML = originalLabelText;
+            labelElement.style.pointerEvents = "auto";
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Erro ao conectar com o servidor Node.js. Verifique se 'node server.js' está rodando!");
+        labelElement.innerHTML = originalLabelText;
+        labelElement.style.pointerEvents = "auto";
+    }
+}
+
+function removeAttachment(id, type, dateStr) {
+    if (!confirm("Deseja remover este anexo da conta?")) return;
+    
+    const acc = accounts.find(a => a.id === id);
+    if (acc) {
+        acc[type] = null;
+        saveAndRefresh();
+        openDayModal(dateStr);
+        showToast("Anexo removido.");
+    }
+}
+
+/* =========================================================
+   MODAL DE DETALHES DO DIA
+========================================================= */
+function openDayModal(dateStr) {
+    activeModalDate = dateStr;
+    const modal = document.getElementById("dayModal");
+    const dayAccounts = accounts.filter(a => a.dueDate === dateStr);
+
+    document.getElementById("modalDateTitle").innerText = `Contas de ${formatDate(dateStr)}`;
+
+    const totalDay = dayAccounts.reduce((sum, a) => sum + Number(a.amount || 0), 0);
+    document.getElementById("modalDaySummary").innerText = `${dayAccounts.length} conta(s) • Total: ${money(totalDay)}`;
+
+    const modalBody = document.getElementById("modalBody");
+
+    if (dayAccounts.length === 0) {
+        modalBody.innerHTML = `<div class="empty">Nenhuma conta cadastrada para este dia.</div>`;
+    } else {
+        modalBody.innerHTML = dayAccounts.map(acc => {
+            const isPaid = acc.status === "pago";
+            const currentStatus = getStatus(acc);
+            
+            return `
+                <div class="modal-item-card ${isPaid ? 'is-paid' : ''}">
+                    <div class="item-header">
+                        <div class="item-check-group" onclick="toggleStatus(${acc.id}, '${dateStr}')">
+                            <div class="custom-check"></div>
+                            <div>
+                                <div class="item-title">
+                                    ${escapeHTML(acc.description)} 
+                                    <span class="status-badge ${currentStatus}">${currentStatus}</span>
+                                </div>
+                                <div class="item-sub">${escapeHTML(acc.category)} • ${money(acc.amount)}</div>
+                                ${acc.notes ? `<div class="item-sub" style="font-style:italic">Obs: ${escapeHTML(acc.notes)}</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn-secondary" onclick="editAccount(${acc.id})" title="Editar">✏️</button>
+                            <button class="btn-danger" onclick="deleteAccount(${acc.id}, '${dateStr}')" title="Excluir">🗑️</button>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO DE ANEXOS GOOGLE DRIVE -->
+                    <div class="attachment-section">
+                        ${acc.boleto ? `
+                            <span class="attachment-badge" onclick="viewAttachment(${acc.id}, 'boleto')" title="Abrir no Google Drive">☁️ Boleto Drive</span>
+                            <span style="cursor:pointer;color:var(--red);font-size:.7rem" onclick="removeAttachment(${acc.id}, 'boleto', '${dateStr}')" title="Excluir Boleto">✕</span>
+                        ` : `
+                            <label class="file-input-label">
+                                ➕ Boleto (Drive)
+                                <input type="file" accept="image/*,application/pdf" onchange="handleFileUpload(this, ${acc.id}, 'boleto', '${dateStr}')">
+                            </label>
+                        `}
+
+                        ${acc.comprovante ? `
+                            <span class="attachment-badge" onclick="viewAttachment(${acc.id}, 'comprovante')" title="Abrir no Google Drive">☁️ Comprovante Drive</span>
+                            <span style="cursor:pointer;color:var(--red);font-size:.7rem" onclick="removeAttachment(${acc.id}, 'comprovante', '${dateStr}')" title="Excluir Comprovante">✕</span>
+                        ` : `
+                            <label class="file-input-label">
+                                ➕ Comprovante (Drive)
+                                <input type="file" accept="image/*,application/pdf" onchange="handleFileUpload(this, ${acc.id}, 'comprovante', '${dateStr}')">
+                            </label>
+                        `}
+                    </div>
+                </div>
+            `;
+        }).join("");
+    }
+
+    document.getElementById("btnNewFromModal").onclick = () => {
+        closeModal();
+        resetForm();
+        document.getElementById("dueDate").value = dateStr;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    modal.classList.add("active");
+}
+
+function closeModal() {
+    document.getElementById("dayModal").classList.remove("active");
+}
+
+function closeModalOnOutsideClick(event) {
+    if (event.target.id === "dayModal") closeModal();
+}
+
+/* =========================================================
+   BACKUP E RESTAURAÇÃO
+========================================================= */
+function exportBackup() {
+    if (accounts.length === 0) {
+        alert("Não há dados para exportar.");
+        return;
+    }
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(accounts, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `backup_financeiro_${todayString()}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    showToast("Backup exportado com sucesso!");
+}
+
+function restoreBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (Array.isArray(data)) {
+                if (confirm("Isto substituirá todas as suas contas atuais. Deseja continuar?")) {
+                    accounts = data;
+                    saveAndRefresh();
+                    showToast("Dados restaurados com sucesso!");
+                }
+            } else {
+                alert("Arquivo de backup inválido.");
+            }
+        } catch (err) {
+            alert("Erro ao ler o arquivo JSON de backup.");
+        }
+    };
+    reader.readAsText(file);
+}
+</script>
+</body>
+</html>
