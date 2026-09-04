@@ -1029,7 +1029,7 @@ function updateUpcomingList() {
         .slice(0, 5);
 
     if (upcoming.length === 0) {
-        upcomingList.innerHTML = `<div class="empty">Nenum vencimento próximo.</div>`;
+        upcomingList.innerHTML = `<div class="empty">Nenhum vencimento próximo.</div>`;
         return;
     }
 
@@ -1180,24 +1180,10 @@ async function handleFileUpload(input, id, type, dateStr) {
     const file = input.files[0];
     if (!file) return;
 
-    const acc = accounts.find(a => a.id === id);
-    if (!acc) return;
-
-    const labelElement = input.parentElement;
-    const originalLabelText = labelElement.innerHTML;
-    
-    // Atualiza o botão exibindo carregamento
-    labelElement.innerHTML = `⏳ Enviando ao Drive...`;
-    labelElement.style.pointerEvents = "none";
-
     const formData = new FormData();
     formData.append("file", file);
-    
-    // ➕ Enviando os dados da conta para o backend renomear o arquivo
-    formData.append("descricao", acc.description || "");
-    formData.append("data", acc.dueDate || "");
-    formData.append("valor", acc.amount || "");
-    formData.append("tipo", type === "comprovante" ? "Comprovante" : "Boleto");
+
+    showToast("Enviando arquivo...");
 
     try {
         const response = await fetch(BACKEND_URL, {
@@ -1205,41 +1191,29 @@ async function handleFileUpload(input, id, type, dateStr) {
             body: formData
         });
 
+        if (!response.ok) throw new Error("Erro na requisição ao servidor.");
+
         const data = await response.json();
+        const acc = accounts.find(a => a.id === id);
 
-        if (data.success && data.link) {
+        if (acc) {
             acc[type] = {
-                name: data.nomeArquivo || file.name,
-                url: data.link,
-                fileId: data.fileId
+                name: file.name,
+                url: data.webViewLink || data.url || "#",
+                id: data.fileId || null
             };
-
-            if (type === 'comprovante') {
-                acc.status = 'pago';
-                acc.paidAt = new Date().toISOString();
-                showToast("Comprovante enviado ao Drive e conta PAGA! ✓");
-            } else {
-                showToast("Boleto salvo no Google Drive!");
-            }
-
             saveAndRefresh();
             openDayModal(dateStr);
-        } else {
-            alert("Erro no upload para o Drive: " + (data.message || "Falha desconhecida."));
-            labelElement.innerHTML = originalLabelText;
-            labelElement.style.pointerEvents = "auto";
+            showToast("Anexo enviado com sucesso!");
         }
-    } catch (err) {
-        console.error(err);
-        alert("Erro ao conectar com o servidor Node.js. Verifique se 'node server.js' está rodando!");
-        labelElement.innerHTML = originalLabelText;
-        labelElement.style.pointerEvents = "auto";
+    } catch (error) {
+        console.error(error);
+        showToast("Falha ao enviar anexo.");
     }
 }
 
 function removeAttachment(id, type, dateStr) {
-    if (!confirm("Deseja remover este anexo da conta?")) return;
-    
+    if (!confirm("Deseja remover este anexo?")) return;
     const acc = accounts.find(a => a.id === id);
     if (acc) {
         acc[type] = null;
@@ -1250,17 +1224,16 @@ function removeAttachment(id, type, dateStr) {
 }
 
 /* =========================================================
-   MODAL DE DETALHES DO DIA
+   GERENCIAMENTO DO MODAL
 ========================================================= */
 function openDayModal(dateStr) {
     activeModalDate = dateStr;
-    const modal = document.getElementById("dayModal");
     const dayAccounts = accounts.filter(a => a.dueDate === dateStr);
-
+    
     document.getElementById("modalDateTitle").innerText = `Contas de ${formatDate(dateStr)}`;
-
-    const totalDay = dayAccounts.reduce((sum, a) => sum + Number(a.amount || 0), 0);
-    document.getElementById("modalDaySummary").innerText = `${dayAccounts.length} conta(s) • Total: ${money(totalDay)}`;
+    
+    const dayTotal = dayAccounts.reduce((sum, a) => sum + Number(a.amount || 0), 0);
+    document.getElementById("modalDaySummary").innerText = `${dayAccounts.length} conta(s) • Total: ${money(dayTotal)}`;
 
     const modalBody = document.getElementById("modalBody");
 
@@ -1268,9 +1241,9 @@ function openDayModal(dateStr) {
         modalBody.innerHTML = `<div class="empty">Nenhuma conta cadastrada para este dia.</div>`;
     } else {
         modalBody.innerHTML = dayAccounts.map(acc => {
-            const isPaid = acc.status === "pago";
-            const currentStatus = getStatus(acc);
-            
+            const st = getStatus(acc);
+            const isPaid = st === "pago";
+
             return `
                 <div class="modal-item-card ${isPaid ? 'is-paid' : ''}">
                     <div class="item-header">
@@ -1279,10 +1252,10 @@ function openDayModal(dateStr) {
                             <div>
                                 <div class="item-title">
                                     ${escapeHTML(acc.description)} 
-                                    <span class="status-badge ${currentStatus}">${currentStatus}</span>
+                                    <span class="status-badge ${st}">${st}</span>
                                 </div>
-                                <div class="item-sub">${escapeHTML(acc.category)} • ${money(acc.amount)}</div>
-                                ${acc.notes ? `<div class="item-sub" style="font-style:italic">Obs: ${escapeHTML(acc.notes)}</div>` : ''}
+                                <div class="item-sub">${money(acc.amount)} • ${escapeHTML(acc.category)}</div>
+                                ${acc.notes ? `<div class="item-sub">📝 ${escapeHTML(acc.notes)}</div>` : ''}
                             </div>
                         </div>
                         <div class="item-actions">
@@ -1291,25 +1264,30 @@ function openDayModal(dateStr) {
                         </div>
                     </div>
 
-                    <!-- SEÇÃO DE ANEXOS GOOGLE DRIVE -->
                     <div class="attachment-section">
+                        <!-- Boleto -->
                         ${acc.boleto ? `
-                            <span class="attachment-badge" onclick="viewAttachment(${acc.id}, 'boleto')" title="Abrir no Google Drive">☁️ Boleto Drive</span>
-                            <span style="cursor:pointer;color:var(--red);font-size:.7rem" onclick="removeAttachment(${acc.id}, 'boleto', '${dateStr}')" title="Excluir Boleto">✕</span>
+                            <span class="attachment-badge">
+                                📄 <span onclick="viewAttachment(${acc.id}, 'boleto')">${escapeHTML(acc.boleto.name)}</span>
+                                <span onclick="removeAttachment(${acc.id}, 'boleto', '${dateStr}')" style="cursor:pointer;color:var(--red);margin-left:4px;">✕</span>
+                            </span>
                         ` : `
                             <label class="file-input-label">
-                                ➕ Boleto (Drive)
-                                <input type="file" accept="image/*,application/pdf" onchange="handleFileUpload(this, ${acc.id}, 'boleto', '${dateStr}')">
+                                📎 Anexar Boleto
+                                <input type="file" onchange="handleFileUpload(this, ${acc.id}, 'boleto', '${dateStr}')">
                             </label>
                         `}
 
+                        <!-- Comprovante -->
                         ${acc.comprovante ? `
-                            <span class="attachment-badge" onclick="viewAttachment(${acc.id}, 'comprovante')" title="Abrir no Google Drive">☁️ Comprovante Drive</span>
-                            <span style="cursor:pointer;color:var(--red);font-size:.7rem" onclick="removeAttachment(${acc.id}, 'comprovante', '${dateStr}')" title="Excluir Comprovante">✕</span>
+                            <span class="attachment-badge">
+                                🧾 <span onclick="viewAttachment(${acc.id}, 'comprovante')">${escapeHTML(acc.comprovante.name)}</span>
+                                <span onclick="removeAttachment(${acc.id}, 'comprovante', '${dateStr}')" style="cursor:pointer;color:var(--red);margin-left:4px;">✕</span>
+                            </span>
                         ` : `
                             <label class="file-input-label">
-                                ➕ Comprovante (Drive)
-                                <input type="file" accept="image/*,application/pdf" onchange="handleFileUpload(this, ${acc.id}, 'comprovante', '${dateStr}')">
+                                🧾 Anexar Comprovante
+                                <input type="file" onchange="handleFileUpload(this, ${acc.id}, 'comprovante', '${dateStr}')">
                             </label>
                         `}
                     </div>
@@ -1319,39 +1297,35 @@ function openDayModal(dateStr) {
     }
 
     document.getElementById("btnNewFromModal").onclick = () => {
-        closeModal();
         resetForm();
         document.getElementById("dueDate").value = dateStr;
+        closeModal();
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    modal.classList.add("active");
+    document.getElementById("dayModal").classList.add("active");
 }
 
 function closeModal() {
     document.getElementById("dayModal").classList.remove("active");
 }
 
-function closeModalOnOutsideClick(event) {
-    if (event.target.id === "dayModal") closeModal();
+function closeModalOnOutsideClick(e) {
+    if (e.target.id === "dayModal") closeModal();
 }
 
 /* =========================================================
    BACKUP E RESTAURAÇÃO
 ========================================================= */
 function exportBackup() {
-    if (accounts.length === 0) {
-        alert("Não há dados para exportar.");
-        return;
-    }
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(accounts, null, 2));
-    const downloadAnchor = document.createElement('a');
+    const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
     downloadAnchor.setAttribute("download", `backup_financeiro_${todayString()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
-    showToast("Backup exportado com sucesso!");
+    showToast("Backup gerado com sucesso!");
 }
 
 function restoreBackup(event) {
@@ -1361,21 +1335,20 @@ function restoreBackup(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            const data = JSON.parse(e.target.result);
-            if (Array.isArray(data)) {
-                if (confirm("Isto substituirá todas as suas contas atuais. Deseja continuar?")) {
-                    accounts = data;
-                    saveAndRefresh();
-                    showToast("Dados restaurados com sucesso!");
-                }
+            const importedAccounts = JSON.parse(e.target.result);
+            if (Array.isArray(importedAccounts)) {
+                accounts = importedAccounts;
+                saveAndRefresh();
+                showToast("Dados restaurados com sucesso!");
             } else {
-                alert("Arquivo de backup inválido.");
+                alert("O arquivo fornecido não possui um formato válido.");
             }
         } catch (err) {
-            alert("Erro ao ler o arquivo JSON de backup.");
+            alert("Erro ao ler o arquivo de backup.");
         }
     };
     reader.readAsText(file);
+    event.target.value = "";
 }
 </script>
 </body>
